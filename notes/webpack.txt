@@ -1,0 +1,136 @@
+webpack
+
+模块化:让我们可以把复杂的程序细化为小的文件。
+
+WebPack：模块打包机。分析项目结构，找到JavaScript模块以及一些浏览器不能直接运行的拓展语言（Scss，TypeScript等），并将其转换和打包为合适的格式供浏览器使用。
+
+WebPack和Grunt以及Gulp相比有什么特性
+
+它们没有太多的可比性，Gulp/Grunt是一种能够优化前端的开发流程的工具，而WebPack是一种模块化的解决方案，不过Webpack的优点使得Webpack在很多场景下可以替代Gulp/Grunt类的工具。
+
+Grunt和Gulp的工作方式是：在一个配置文件中，指明对某些文件进行类似编译，组合，压缩等任务的具体步骤，工具之后可以自动替你完成这些任务。
+
+Webpack的工作方式是：把你的项目当做一个整体，通过一个给定的主文件（如：index.js），Webpack将从这个文件开始找到你的项目的所有依赖文件，使用loaders处理它们，最后打包为一个（或多个）浏览器可识别的JavaScript文件。
+
+如果实在要把二者进行比较，Webpack的处理速度更快更直接，能打包更多不同类型的文件。
+
+基本使用：
+	
+	初始化文件夹 cnpm init
+
+	全局安装 cnpm install webpack -g (webpack-dev-server也要全局安装)
+
+	局部安装 cnpm install webpack@3 -D (一般使用3版本，-D即为开发依赖)
+
+1：模块化文件
+
+	1、命令行 webpack src/a.js(源文件) dist/b.js(输出文件)
+
+	2、配置文件(重): 根目录新建 webpack.config.js
+	
+	webpack.config.js=>
+		module.exports = {
+			entry:{	// 入口 如只有一个则直接写为 entry:'./src/test.js'
+				app:'./src/a.js',
+				app1:'./src/b.js'
+			},
+			output:{ // 出口
+				path:__dirname, // 所有文件输出路径，服务器开启路径， 表示当前文件所处目录 
+				filename:'dist/[name][hash:10].js' // 单个dist/app.js.name为入口的名字(app，app1).hash随机字串 解决缓存问题
+
+			}
+
+		}
+
+2:编译es6语法(需要插件)
+	
+	① cnpm install babel-loader babel-core -D
+	② cnpm install babel-preset-es2015 -D
+
+	border分为预设(babel-preset-xxx)一类的功能点，即是插件集合，将功能打包
+		插件(babel-plugin-xxx)独立的功能点，解决独立功能，(如 类问题，函数问题)
+
+	使用插件:① 在配置文件 添加配置webpack.config.js=>
+		 
+		module:{ // 编译时需要使用的模块
+			rules:[{ //配置需要是使用的loaders
+				loader:'babel-loader',
+                		test:/\.js$/, //编译文件的匹配规则
+               		 	exclude: /node_modules/  //除去的路径
+			}]
+		}
+		② 在根目录 新建 .babelrc
+		.babelrc =>{
+				"presets": [ // 预设
+        					'es2015'
+   					],
+    				"plugins": [ // 插件
+        					//
+    					]
+			}
+
+3.编译css样式
+	
+	① cnpm install css-loader style-loader -D	(编译.css文件 后编译 style样式)
+
+	② 配置文件 rules 新增 loader
+		{
+                	loader: 'style-loader!css-loader',  // 两个loader 从后至前 注意顺序
+                	test: /\.css$/
+            	}
+
+4.编译文件路径
+
+	① cnpm install file-loader -D 
+
+	
+	② 配置文件 rules 新增 loader
+		{
+                	loader: 'file-loader',
+                	test: /\.(png|ttf|jpg|jpeg|gif)$/   // 多个条件  或者
+            	}
+
+备注：① webpack --progress 显示进度	webpack -p  混淆压缩代码
+
+      ② webpack-dev-server 启动服务器  首先全局安装 再局部安装 cnpm install webpack-dev-server@2 -D
+	
+	使用：命令行 webpack-dev-server   开启路径为配置文件里的path
+	作用：将代码注入到服务器 不再本地文件夹出现 可动态更新
+        参数：--port=9090 端口号 --host=10.36.140.11 域名 (localhost 或 ip) --open 自动打开浏览器
+	
+      ③ es6模块化
+
+	一个独立文件即一个模块
+	1.引入 import 名字 from './a.js';
+	  输出 export default{xxxxx} 或 let obj ={xxx}; export default obj // 默认输出
+	2.指定输出 export let str = '2';在一句话 可以export 多个
+	  引入 import{str} from './a.js';
+	3.同时存在 该怎样就怎样 或
+	  接收全部 import * as cModule from './a.js';
+		as 关键字 import {a as b} from './a.js';
+
+
+使用webpack 构建vue开发环境
+
+	1.配置好webpack配置文件及相关loader，使用模块化开发vue 则需要安装vue-loader@13（新版本与webpack4使用 降低版本配合webpack3 会提示安装 css-loader以及vue-template-compliler）然后 vue -S
+
+	2.根.js 引入 import Vue from 'vue';以及根组件import App from './App.vue';如果有路由则引入路由import router from './router/router.js';（使用路由：先 vue-router -S 配置路由 需要vue 和 vue-router（import 引入） 还需要Vue.use（VueRouter） 引入相关页面 const routes=[{name:path:component:alias:children:......}]配置表  创建实例const router = new VueRouter（｛routes：routes｝）输出 export default router；
+
+	3.根.js创建vue实例 new Vue({
+		el:"#app",
+    		router,
+    		components:{
+        		App
+    		},
+    		render:function(h){
+        		return h(App)
+    		}
+	})在实例之前 可以声明一些全局组件 自定义指令 过滤器（Vue.component()...）
+		可以 中间件传值 Vue.prototype.$pubsub = new Vue(); // 传值
+
+	4. 模块化开发 注意组件等功能复用性(高内聚，低耦合),以及传值问题 路由 ...
+
+	5.需要 ajax cnpm install axios -S
+	在 node_modules webpack-dev-server lib server.js 
+	app.use('/v4',httpProxyMiddleware({target:'https://m.maizuo.com',changeOrigin:true}))
+

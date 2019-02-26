@@ -1,0 +1,309 @@
+模块化开发 使用react:
+
+=> 利用webpack
+
+=> 配置相关loader 
+	(webpack及服务器，编译es6等 -D 注:babel-preset-react 是react解析dom结构)
+   => npm install react react-dom -S (react核心)
+  
+   => npm install prop-types -S (父子传值校验)
+
+   => npm install pubsub-js -S (非父子传值中间对象)
+
+
+①main.js =>
+
+	import React from 'react'
+	import ReactDOM from 'react-dom'
+
+	// 引入的React ReactDOM 名字不要随意
+	import App from './App'	// 组件
+
+	ReactDOM.render( // 参数1 dom结构 2节点对象 3渲染完成的回调 可省略
+    		<App/>,
+    		document.querySelector('#app')
+	)
+
+②在组件=>
+
+	import React, {Component} from 'react' // React 不要漏
+
+	import Wrap from './components/Wrap' // 引入组件首字母需大写方可<Wrap />
+
+	export default class App extends Component{ // 输出是一个类 必须实现render方法
+		
+		constructor(){
+                         super();
+        		 this.state = {
+                            selectValue: 1910
+       			 }
+                }	
+		
+	        this.setState({message: 'hello world'});// 改变数据
+
+		render(){
+        	     return (
+            		 <div> // 一个容器 所有dom都是对象 所以在{可以有表达式}
+
+                	    <Wrap/>
+
+			    <h1 title={this.state.message}>test</h1>
+
+                	    <h1 className={classVal}>test</h1>
+
+                            <div style={{width:'200px',height:'200px'}}></div>
+			
+			    {arr.map((item, index)=>{
+                    		return <li key={index}>{item}</li>
+                		})}
+				
+			     onMouseMove={this.btnAction.bind(this)} // 事件
+
+			     {/* 父组件传值给子组件 */}
+                             <One data={{fontSize: '12px', color: 'red'}} />
+			     this.props.data;// 外部属性直接使用
+			
+			     {子到父传递一个方法在子组件触发并传入参数}
+			     <Two getData={this.handleGetData.bind(this)}/>		     
+
+                         </div>
+                     )
+                 }
+
+	}
+
+	Two.propTypes = { // 在类外面校验值的类型
+    		getData: PropTypes.func
+	}
+
+
+③ 非父子传值 在组件里都 import "pubsub-js" 即可
+	监听方在constructor里 
+	var token = PubSub.subscribe('MY TOPIC一致的名字',(msg, data)=>{
+            console.log( msg,' ---------- ', data );
+            this.setState({message: data});
+        });
+	
+	触发方 PubSub.publish('MY TOPIC', value);
+
+生命周期=>
+
+constructor(){super();} // 挂载 构造函数 
+
+One.getDerivedStateFromProps = function(props, state){
+//根据return的结果，合并给已有的state
+//初始化执行，每一次更新执行 静态方法
+}
+
+render(){return()}//渲染
+
+componentDidMount(){}//挂载完毕
+
+shouldComponentUpdate(newProps, newState){//新值
+        console.log('shouldComponentUpdate方法执行了');
+        // console.log(this.props);//旧值
+        // console.log(this.state);//旧值
+        return true;//控制dom是否应该更新
+    }
+    getSnapshotBeforeUpdate(oldProps, oldState){//旧值
+        console.log('getSnapshotBeforeUpdate方法执行了');
+        // console.log(this.props);//新值
+        // console.log(this.state);//新值
+        return null;
+    }
+    //完成更新
+    componentDidUpdate(){
+        console.log('componentDidUpdate方法执行了');
+    }
+
+
+    //销毁
+    componentWillUnmount(){
+        console.log('componentWillUnmount方法执行了');
+    }
+
+One.displayName = 'one-com';//设置one组件别名
+
+脚手架=>
+
+npm install -g create-react-app 全局
+
+create-react-app 项目名 创建项目
+
+组件嵌套 利用 this.props.children 接收(vue solt)
+
+路由=>
+
+react-router-dom 安装 插件
+import { BrowserRouter, Route, Link } from 'react-router-dom'
+
+render(){return(
+// 渲染方式
+<BrowserRouter>
+ 
+<div id="root">
+
+{/* Route是用于装每一个配置组件的组件容器，Route写在哪里，运行时，装载的组件就会渲染在哪里 */}
+{/* 路由的三种渲染方式： */}
+
+{/* 方式1：component */}
+          <Route path="/home" component={Home}/>
+
+
+
+{/* 方式2：render */}
+          <Route path="/discover" render={()=>{
+console.log('运行');
+            inputVal = this.refs.in?this.refs.in.value:'';
+
+// return <Discover message="hello discover"/>
+
+return (
+ 
+<div>
+                <Discover message={inputVal}/>
+
+</div>
+           
+)
+          
+}}/>
+
+    
+      {/* 方式3：children */}
+          
+<Route component={Setting} children={()=>{
+            return <Setting/>
+         
+ }}/>
+
+
+
+          
+<Link to="/home">首页</Link>
+          <Link to="/discover">发现</Link>
+          
+<Link to="/setting">设置</Link>
+          {/* <a href="/home">首页</a>
+          
+<a href="/discover">发现</a>
+          
+<a href="/setting">设置</a> */}
+
+  
+      
+</div>
+      
+</BrowserRouter>
+)}
+
+路由标签属性
+
+exact:完全匹配
+
+strict :管理/
+
+sensitive: 路径识别大小写
+
+路由传值=》
+
+   //只有通过Route组件的component读取的组件，在constructor才能得到路由相关属性
+	render 方式在回调中
+  constructor({history, match, location}){
+      super();
+      this.history = history;
+      /*
+      history：路由操作对象：
+      history.push()
+      history.replace()
+      history.go()
+      history.goBack()
+      history.goForword()
+      */
+      console.log(history);
+      /*
+      match: 路由地址中的参数
+      match.params
+      */
+      console.log(match);
+      /*
+      location: 获得路由中state的值
+	//<Route path="/home/detail/:id" component={Detail}/>
+	//<Link to={{pathname: '/home/detail/001', state: [1,2,3,4]}}>详情1</Link>
+      location.state
+      */
+      console.log(location);
+  }
+
+link =>
+
+import { BrowserRouter, HashRouter, MemoryRouter, Route, Link, NavLink } from 'react-router-dom'
+
+ <Link to={{
+            
+pathname: '/home', 
+            
+search: '?keyword=test', 
+            
+hash: '#hello', 
+            
+state: {name: 'zhansan', age: 10, height: 100}
+}}
+>
+            
+首页
+          
+</Link>
+
+<NavLink to="/home" exact isActive={()=>{
+            
+console.log('选中了');
+            
+return true;
+          
+}}>首页</NavLink>
+
+
+扩展=>
+
+import { BrowserRouter as Router, Route, NavLink, Switch, Redirect } from 'react-router-dom'
+
+{/* Switch：在Switch中，只要有一个Route匹配，就结束Switch内部其他Route的匹配 */}
+
+{/* 根页面 */}
+          
+<Switch>
+            
+<Route path="/" exact render={()=>{
+              
+//重定向
+             
+ console.log('走了重定向');
+              
+return <Redirect to="/home"/>
+            
+}}/>
+            
+<Route component={Home} path="/home"/>
+            
+<Route component={Discover} path="/discover"/>
+            
+<Route component={Order} path="/order"/>
+            
+<Route component={Mine} path="/mine"/>
+            
+<Route render={()=>{
+             
+ //重定向
+              
+console.log('走了重定向2');
+              
+return <Redirect to="/home"/>
+            
+}}/>
+          
+</Switch>
+
+redux -S => 全局状态管理工具
+
+whatwg-fetch => ajax  脚手架自带

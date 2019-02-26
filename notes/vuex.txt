@@ -1,0 +1,204 @@
+
+vue 脚手架(自动构建环境，专注于代码开发)
+	cnpm install -g vue-cli (2.0) 
+
+	vue init 模版名 项目名(查看模版名 vue list.常用 webpack 和webpack-simple)
+
+	渲染方式不同,用法一致,src项目核心目录
+
+------------------------------------------------
+
+	3.0的 全局安装  cnpm install -g @vue/cli(最新的)
+
+	vue create 项目名 不允许大写可用-分割
+
+	不选 default 会代码严格
+
+Vuex：
+	vue.js的状态管理模式(可理解为全局数据管理工具或模式)，集中式管理所有组件的公共数据，并以一种可预测的方式发生变化(可以看作保证单向数据流,数据只能自身更改)。
+	Vuex 应用的核心就是 store（仓库）。“store”基本上就是一个容器，它包含着你的应用中大部分的状态 (state)。①响应式②不可直接更改
+
+ store的简单实例 index.js=>(与路由的规则相似输出挂载到vue实例)
+
+	import Vue from 'vue'
+	import Vuex from 'vuex'
+	Vue.use(Vuex)
+
+	const state = {// 全局状态(数据)
+  	username: '张三',
+ 	used: '007',
+  	age: 30
+	}
+
+	// 操作状态的事件
+	const actions = {
+  		modifyname(context, params){
+    			context.state.username = params;
+			context.commit('modifyName', params);
+  		},
+  		modifyage(){
+    			console.log('modifyage执行了');
+  		}
+	}
+	// 全局计算属性
+	const getters = {
+  
+		isLogin(state){
+  
+			if(state.username){
+  
+				return true;
+    
+			}else{
+      
+				return false
+    
+			}
+  
+		}
+
+	}
+	//操作状态的方法
+（可以异步操作）
+	//外部通过commit调用
+
+	const mutations = {
+  
+		modifyName(state, value){
+    
+			state.username = value;
+  
+		}
+
+
+	}
+	const store = new Vuex.Store({
+  		state,
+  		actions,
+		mutations,
+		getters
+	})
+
+	console.log(store);
+
+	export default store;
+
+ 在组件里面 home.vue =>
+
+	this.$store.state.username 可以访问数据(this.$store.getters.isLogin)
+
+	想要将全局状态变为自己的则需要computed计算 return this...
+
+	直接更改this.$store.state.username = this.$refs.input.value;不合规范
+
+	应该：this.$store.dispatch('modifyname', 值);类似中间件的触发事件
+	
+ 如果引入import Vuex from 'vuex';会方便很多
+	
+	①：变为内部属性
+	computed: Vuex.mapState(['username', 'age', 'userid']),属性名固定
+  	computed: Vuex.mapState({key值：组件内部属性的名字,value值：全局属性的名字
+     				user: 'username',
+     				age: 'age',
+     				id: 'userid'
+   				}),
+	注：computed:{...} 可以将属性下的多个属性合并一起
+
+	②：变为内部触发事件
+	methods: Vuex.mapActions(['modifyname']),
+  	methods: {
+    		...Vuex.mapActions({modifyUser: 'modifyname'}),
+    		print(){console.log(this.count);}
+  	},
+	③变为内部计算属性
+	Vuex.mapGetters(['isLogin'])
+	
+
+vuex store的  module:(数据模块化)
+
+	将全局得转为自身的  在自身需要设置为对象赋予key值 用 模块. 基本用 模块/
+
+	在模块里加上namespaced：true,命名空间配置 (因为方法不分模块会相互冲突同名)
+	
+	然后里面的state 和store都指向当前的模块范围
+
+	模块的配置与全局的store一致，不用引入vue vuex
+	
+	export default {
+    		namespaced: true,
+    		state,
+    		getters,
+    		mutations,
+    		actions
+	}
+
+	在模块输出一个对象  在store 引入  并配置  modules:{
+		//key：外部访问模块使用的名字
+    
+		// value：模块对象
+    
+		user: userModule,
+    
+		location: locationModule,
+    
+		cart: cartModule
+	}
+	局部:这个是函数里面
+	...Vuex.mapState({
+      
+		// key：组件内部使用的属性名字
+      
+		// value： 全局属性名字
+      
+		username: (state)=>{
+        
+		return state.user.username
+      
+		}
+   	
+	})
+
+
+vuex  封装插件
+	1.将插件放在一个包里(自带的js，css也在其中，
+		在vue里面引入 import './swiper-3.4.2.min.js' 给vue一个name)
+
+	2.在包里配置index.js 引入各个组件模块 再输出一个方法 export default{
+		 install(Vue){  // 在外部引入再调用Vue.use(),该方法执行 并传入vue对象
+        		console.log('install执行了');
+        		Vue.component(Swiper.name, Swiper);
+    		}
+	}
+	
+	3.在入口main.js引入插件包(文件夹) import myBundle from './my-boundle'
+	并调用Vue.use(myBundle)
+
+	4.在组件即可使用 自定义插件(组件)
+
+扩展:多页面开发
+	cnpm install html-webpack-plugin -D （不在index.html script引入）
+
+	在webpack.config.js 引入 html-webpack-plugin
+	
+	entry: {
+        	discover: './src/app/discover/main.js',
+        	home: './src/app/home/main.js',
+        	order: './src/app/order/main.js',
+        	mine: './src/app/mine/main.js'
+    	},
+    	output: {
+        	path: __dirname+'/dist',=> +/dist开服务器不行
+        	filename: 'js/[name].[hash:8].js'
+    	},
+	
+	并配置 plugins:[
+		new htmlWebpackPlugin({	// 多个页面则new多个配置
+			template:'./public/discover.html', =>  初始模版文件 
+			filename:'./iscover.html',=> 新的html文件 路径相对于path
+			chunks:['discover'] =>需要用到的js
+		})
+	]
+	备注:最后生成的html会自动引入打包好的js
+
+	在src下 每一个html 对应一个根组件和入口js 根组件可以使用复用的组件
+	
